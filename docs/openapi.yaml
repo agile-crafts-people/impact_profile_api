@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
-  title: {{info.name}} {{service.name}} API
+  title: Creators Dashboard profile API
   description: |
-    A Flask + MongoDB API for the {{service.name}} service.
+    A Flask + MongoDB API for the profile service.
     
     ## Authentication
     All endpoints (except `/dev-login` and `/metrics`) require JWT authentication via the `Authorization` header:
@@ -13,13 +13,13 @@ info:
     For local development, obtain a token from the `/dev-login` endpoint.
   version: 0.1.0
   contact:
-    name: {{org.name}}
-    email: {{org.email}}
+    name: Agile Crafts People
+    email: info@agilecrafts.com
   license:
     name: Apache-2.0
 
 servers:
-  - url: http://localhost:{{repo.port}}
+  - url: http://localhost:9096
     description: Local development server
 
 tags:
@@ -29,22 +29,14 @@ tags:
     description: Configuration endpoints
   - name: Metrics
     description: Monitoring endpoints
-{% for domain in service.data_domains.controls -%}
-{{ '  ' -}}
-- name: {{domain}}
-    description: {{domain}} operations (create, read, update)
-{% endfor -%}
-{% for domain in service.data_domains.creates -%}
-{{ '  ' -}}
-- name: {{domain}}
-    description: {{domain}} operations (create, read)
-{% endfor -%}
-{% for domain in service.data_domains.consumes -%}
-{{ '  ' -}}
-- name: {{domain}}
-    description: {{domain}} operations (read-only)
-{% endfor -%}
-
+  - name: Profile
+    description: Profile operations (create, read, update)
+  - name: Platform
+    description: Platform operations (create, read, update)
+  - name: User
+    description: User operations (create, read, update)
+  - name: Identity
+    description: Identity operations (read-only)
 paths:
   /dev-login:
     post:
@@ -152,15 +144,13 @@ paths:
               schema:
                 type: string
 
-{% for domain in service.data_domains.controls -%}
-{{ '  ' -}}
-/api/{{domain}}:
+  /api/Profile:
     get:
       tags:
-        - {{domain}}
-      summary: Get all {{domain}} documents
-      description: Retrieve infinite scroll batch of sorted, filtered {{domain}} documents
-      operationId: get{{domain}}s
+        - Profile
+      summary: Get all Profile documents
+      description: Retrieve infinite scroll batch of sorted, filtered Profile documents
+      operationId: getProfiles
       security:
         - bearerAuth: []
       parameters:
@@ -170,7 +160,7 @@ paths:
           description: Optional name filter (supports partial matches, case-insensitive)
           schema:
             type: string
-            example: my-{{domain}}
+            example: my-Profile
         - name: after_id
           in: query
           required: false
@@ -242,10 +232,10 @@ paths:
           $ref: '#/components/responses/InternalError'
     post:
       tags:
-        - {{domain}}
-      summary: Create a new {{domain}} document
-      description: Create a new {{domain}} document (requires staff or admin role)
-      operationId: create{{domain}}
+        - Profile
+      summary: Create a new Profile document
+      description: Create a new Profile document (requires staff or admin role)
+      operationId: createProfile
       security:
         - bearerAuth: []
       requestBody:
@@ -253,10 +243,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/{{domain}}Input'
+              $ref: '#/components/schemas/ProfileInput'
       responses:
         '201':
-          description: {{domain}} created successfully
+          description: Profile created successfully
           content:
             application/json:
               schema:
@@ -272,31 +262,31 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /api/{{domain}}/{{'{'}}{{domain}}Id{{'}'}}:
+  /api/Profile/{ProfileId}:
     get:
       tags:
-        - {{domain}}
-      summary: Get {{domain}} by {{domain}}Id
-      description: Retrieve a specific {{domain}} document by its {{domain}}Id
-      operationId: get{{domain}}
+        - Profile
+      summary: Get Profile by ProfileId
+      description: Retrieve a specific Profile document by its ProfileId
+      operationId: getProfile
       security:
         - bearerAuth: []
       parameters:
-        - name: {{domain}}Id
+        - name: ProfileId
           in: path
           required: true
-          description: The {{domain}} ID (MongoDB ObjectId)
+          description: The Profile ID (MongoDB ObjectId)
           schema:
             type: string
             pattern: '^[0-9a-fA-F]{24}$'
             example: 507f1f77bcf86cd799439011
       responses:
         '200':
-          description: Successfully retrieved {{domain}}
+          description: Successfully retrieved Profile
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/{{domain}}'
+                $ref: '#/components/schemas/Profile'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -305,17 +295,17 @@ paths:
           $ref: '#/components/responses/InternalError'
     patch:
       tags:
-        - {{domain}}
-      summary: Update {{domain}} document
-      description: Update a {{domain}} document (requires admin role). Cannot update _id, created, or saved fields.
-      operationId: update{{domain}}
+        - Profile
+      summary: Update Profile document
+      description: Update a Profile document (requires admin role). Cannot update _id, created, or saved fields.
+      operationId: updateProfile
       security:
         - bearerAuth: []
       parameters:
-        - name: {{domain}}Id
+        - name: ProfileId
           in: path
           required: true
-          description: The {{domain}} ID (MongoDB ObjectId)
+          description: The Profile ID (MongoDB ObjectId)
           schema:
             type: string
             pattern: '^[0-9a-fA-F]{24}$'
@@ -325,14 +315,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/{{domain}}Update'
+              $ref: '#/components/schemas/ProfileUpdate'
       responses:
         '200':
-          description: {{domain}} updated successfully
+          description: Profile updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/{{domain}}'
+                $ref: '#/components/schemas/Profile'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -341,17 +331,13 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
-{% endfor -%}
-
-{% for domain in service.data_domains.creates -%}
-{{ '  ' -}}
-/api/{{domain}}:
+  /api/Platform:
     get:
       tags:
-        - {{domain}}
-      summary: Get all {{domain}} documents
-      description: Retrieve infinite scroll batch of sorted, filtered {{domain}} documents
-      operationId: get{{domain}}s
+        - Platform
+      summary: Get all Platform documents
+      description: Retrieve infinite scroll batch of sorted, filtered Platform documents
+      operationId: getPlatforms
       security:
         - bearerAuth: []
       parameters:
@@ -361,7 +347,7 @@ paths:
           description: Optional name filter (supports partial matches, case-insensitive)
           schema:
             type: string
-            example: my-{{domain}}
+            example: my-Platform
         - name: after_id
           in: query
           required: false
@@ -383,7 +369,7 @@ paths:
         - name: sort_by
           in: query
           required: false
-          description: Field to sort by (name, description, created.at_time)
+          description: Field to sort by (name, description, status, created.at_time, saved.at_time)
           schema:
             type: string
             default: name
@@ -399,7 +385,7 @@ paths:
             example: asc
       responses:
         '200':
-          description: Successfully retrieved {{domain}}s
+          description: Successfully retrieved controls
           content:
             application/json:
               schema:
@@ -413,7 +399,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: '#/components/schemas/{{domain}}'
+                      $ref: '#/components/schemas/Control'
                   limit:
                     type: integer
                     example: 10
@@ -433,10 +419,10 @@ paths:
           $ref: '#/components/responses/InternalError'
     post:
       tags:
-        - {{domain}}
-      summary: Create a new {{domain}} document
-      description: Create a new {{domain}} document (requires staff or admin role)
-      operationId: create{{domain}}
+        - Platform
+      summary: Create a new Platform document
+      description: Create a new Platform document (requires staff or admin role)
+      operationId: createPlatform
       security:
         - bearerAuth: []
       requestBody:
@@ -444,10 +430,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/{{domain}}Input'
+              $ref: '#/components/schemas/PlatformInput'
       responses:
         '201':
-          description: {{domain}} created successfully
+          description: Platform created successfully
           content:
             application/json:
               schema:
@@ -463,48 +449,82 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /api/{{domain}}/{{'{'}}{{domain}}Id{{'}'}}:
+  /api/Platform/{PlatformId}:
     get:
       tags:
-        - {{domain}}
-      summary: Get {{domain}} by {{domain}}Id
-      description: Retrieve a specific {{domain}} document by its {{domain}}Id
-      operationId: get{{domain}}
+        - Platform
+      summary: Get Platform by PlatformId
+      description: Retrieve a specific Platform document by its PlatformId
+      operationId: getPlatform
       security:
         - bearerAuth: []
       parameters:
-        - name: {{domain}}Id
+        - name: PlatformId
           in: path
           required: true
-          description: The {{domain}} ID (MongoDB ObjectId)
+          description: The Platform ID (MongoDB ObjectId)
           schema:
             type: string
             pattern: '^[0-9a-fA-F]{24}$'
             example: 507f1f77bcf86cd799439011
       responses:
         '200':
-          description: Successfully retrieved {{domain}}
+          description: Successfully retrieved Platform
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/{{domain}}'
+                $ref: '#/components/schemas/Platform'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
-{% endfor -%}
-
-{% for domain in service.data_domains.consumes -%}
-{{ '  ' -}}
-  /api/{{domain}}:
+    patch:
+      tags:
+        - Platform
+      summary: Update Platform document
+      description: Update a Platform document (requires admin role). Cannot update _id, created, or saved fields.
+      operationId: updatePlatform
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: PlatformId
+          in: path
+          required: true
+          description: The Platform ID (MongoDB ObjectId)
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            example: 507f1f77bcf86cd799439011
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlatformUpdate'
+      responses:
+        '200':
+          description: Platform updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Platform'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/User:
     get:
       tags:
-        - {{domain}}
-      summary: Get all {{domain}} documents
-      description: Retrieve infinite scroll batch of sorted, filtered {{domain}} documents (read-only)
-      operationId: get{{domain}}s
+        - User
+      summary: Get all User documents
+      description: Retrieve infinite scroll batch of sorted, filtered User documents
+      operationId: getUsers
       security:
         - bearerAuth: []
       parameters:
@@ -514,7 +534,194 @@ paths:
           description: Optional name filter (supports partial matches, case-insensitive)
           schema:
             type: string
-            example: my-{{domain}}
+            example: my-User
+        - name: after_id
+          in: query
+          required: false
+          description: Cursor for infinite scroll (ID of last item from previous batch, omit for first request)
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            example: 507f1f77bcf86cd799439011
+        - name: limit
+          in: query
+          required: false
+          description: Items per page (max 100)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+            example: 10
+        - name: sort_by
+          in: query
+          required: false
+          description: Field to sort by (name, description, status, created.at_time, saved.at_time)
+          schema:
+            type: string
+            default: name
+            example: name
+        - name: order
+          in: query
+          required: false
+          description: Sort order
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: asc
+            example: asc
+      responses:
+        '200':
+          description: Successfully retrieved controls
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - items
+                  - limit
+                  - has_more
+                  - next_cursor
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Control'
+                  limit:
+                    type: integer
+                    example: 10
+                  has_more:
+                    type: boolean
+                    example: true
+                  next_cursor:
+                    type: string
+                    nullable: true
+                    pattern: '^[0-9a-fA-F]{24}$'
+                    example: 507f1f77bcf86cd799439011
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags:
+        - User
+      summary: Create a new User document
+      description: Create a new User document (requires staff or admin role)
+      operationId: createUser
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserInput'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                    pattern: '^[0-9a-fA-F]{24}$'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/User/{UserId}:
+    get:
+      tags:
+        - User
+      summary: Get User by UserId
+      description: Retrieve a specific User document by its UserId
+      operationId: getUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: UserId
+          in: path
+          required: true
+          description: The User ID (MongoDB ObjectId)
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            example: 507f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: Successfully retrieved User
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      tags:
+        - User
+      summary: Update User document
+      description: Update a User document (requires admin role). Cannot update _id, created, or saved fields.
+      operationId: updateUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: UserId
+          in: path
+          required: true
+          description: The User ID (MongoDB ObjectId)
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            example: 507f1f77bcf86cd799439011
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/Identity:
+    get:
+      tags:
+        - Identity
+      summary: Get all Identity documents
+      description: Retrieve infinite scroll batch of sorted, filtered Identity documents (read-only)
+      operationId: getIdentitys
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: name
+          in: query
+          required: false
+          description: Optional name filter (supports partial matches, case-insensitive)
+          schema:
+            type: string
+            example: my-Identity
         - name: after_id
           in: query
           required: false
@@ -552,7 +759,7 @@ paths:
             example: asc
       responses:
         '200':
-          description: Successfully retrieved {{domain}}s
+          description: Successfully retrieved Identitys
           content:
             application/json:
               schema:
@@ -566,7 +773,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: '#/components/schemas/{{domain}}'
+                      $ref: '#/components/schemas/Identity'
                   limit:
                     type: integer
                     example: 10
@@ -584,43 +791,37 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalError'
-{% endfor -%}
-
-{% for domain in service.data_domains.consumes -%}
-{{ '  ' -}}
-/api/{{domain}}/{{ '{'}}{{domain}}Id}:
+  /api/Identity/{IdentityId}:
     get:
       tags:
-        - {{domain}}
-      summary: Get {{domain}} by {{domain}}Id
-      description: Retrieve a specific {{domain}} document by its {{domain}}Id (read-only)
-      operationId: get{{domain}}
+        - Identity
+      summary: Get Identity by IdentityId
+      description: Retrieve a specific Identity document by its IdentityId (read-only)
+      operationId: getIdentity
       security:
         - bearerAuth: []
       parameters:
-        - name: {{domain}}Id
+        - name: IdentityId
           in: path
           required: true
-          description: The {{domain}} ID (MongoDB ObjectId)
+          description: The Identity ID (MongoDB ObjectId)
           schema:
             type: string
             pattern: '^[0-9a-fA-F]{24}$'
             example: 507f1f77bcf86cd799439011
       responses:
         '200':
-          description: Successfully retrieved {{domain}}
+          description: Successfully retrieved Identity
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/{{domain}}'
+                $ref: '#/components/schemas/Identity'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
-{% endfor -%}
-
 components:
   securitySchemes:
     bearerAuth:
@@ -716,11 +917,9 @@ components:
           pattern: '^[^\s]{1,40}$'
           example: corr-abc123
 
-{% for domain in service.data_domains.controls -%}
-{{ '    ' -}}
-{{domain}}:
+    Profile:
       type: object
-      description: {{domain}} domain document
+      description: Profile domain document
       additionalProperties: false
       required:
         - _id
@@ -735,17 +934,17 @@ components:
           example: 507f1f77bcf86cd799439011
         name:
           type: string
-          description: {{domain}} name
+          description: Profile name
           pattern: '^[^\s]{1,40}$'
-          example: my-{{domain}}
+          example: my-Profile
         description:
           type: string
-          description: {{domain}} description
+          description: Profile description
           pattern: '^[^\t\n]{0,255}$'
-          example: A sample {{domain}} document
+          example: A sample Profile document
         status:
           type: string
-          description: {{domain}} status
+          description: Profile status
           enum:
             - active
             - archived
@@ -755,57 +954,55 @@ components:
         saved:
           $ref: '#/components/schemas/Breadcrumb'
 
-    {{domain}}Input:
+    ProfileInput:
       type: object
-      description: Input for creating a {{domain}} document
+      description: Input for creating a Profile document
       properties:
         name:
           type: string
-          description: {{domain}} name
+          description: Profile name
           pattern: '^[^\s]{1,40}$'
-          example: my-{{domain}}
+          example: my-Profile
         description:
           type: string
-          description: {{domain}} description
+          description: Profile description
           pattern: '^[^\t\n]{0,255}$'
-          example: A sample {{domain}} document
+          example: A sample Profile document
         status:
           type: string
-          description: {{domain}} status
+          description: Profile status
           enum:
             - active
             - archived
           example: active
 
-    {{domain}}Update:
+    ProfileUpdate:
       type: object
-      description: Fields to update in a {{domain}} document (cannot include _id, created, saved)
+      description: Fields to update in a Profile document (cannot include _id, created, saved)
       properties:
         name:
           type: string
-          description: {{domain}} name
+          description: Profile name
           pattern: '^[^\s]{1,40}$'
         description:
           type: string
-          description: {{domain}} description
+          description: Profile description
           pattern: '^[^\t\n]{0,255}$'
         status:
           type: string
-          description: {{domain}} status
+          description: Profile status
           enum:
             - active
             - archived
-{% endfor -%}
-{% for domain in service.data_domains.creates -%}
-{{ '    ' -}}
-{{domain}}:
+    Platform:
       type: object
-      description: {{domain}} domain document
+      description: Platform domain document
       additionalProperties: false
       required:
         - _id
         - name
         - created
+        - saved
       properties:
         _id:
           type: string
@@ -814,45 +1011,146 @@ components:
           example: 507f1f77bcf86cd799439011
         name:
           type: string
-          description: {{domain}} name
+          description: Platform name
           pattern: '^[^\s]{1,40}$'
-          example: my-{{domain}}
+          example: my-Platform
         description:
           type: string
-          description: {{domain}} description
+          description: Platform description
           pattern: '^[^\t\n]{0,255}$'
-          example: A sample {{domain}} document
+          example: A sample Platform document
         status:
           type: string
-          description: {{domain}} status
+          description: Platform status
+          enum:
+            - active
+            - archived
           example: active
         created:
           $ref: '#/components/schemas/Breadcrumb'
+        saved:
+          $ref: '#/components/schemas/Breadcrumb'
 
-    {{domain}}Input:
+    PlatformInput:
       type: object
-      description: Input for creating a {{domain}} document
+      description: Input for creating a Platform document
       properties:
         name:
           type: string
-          description: {{domain}} name
+          description: Platform name
           pattern: '^[^\s]{1,40}$'
-          example: my-{{domain}}
+          example: my-Platform
         description:
           type: string
-          description: {{domain}} description
+          description: Platform description
           pattern: '^[^\t\n]{0,255}$'
-          example: A sample {{domain}} document
+          example: A sample Platform document
         status:
           type: string
-          description: {{domain}} status
+          description: Platform status
+          enum:
+            - active
+            - archived
           example: active
-{% endfor -%}
-{% for domain in service.data_domains.consumes -%}
-{{ '    ' -}}
-{{domain}}:
+
+    PlatformUpdate:
       type: object
-      description: {{domain}} domain document (read-only)
+      description: Fields to update in a Platform document (cannot include _id, created, saved)
+      properties:
+        name:
+          type: string
+          description: Platform name
+          pattern: '^[^\s]{1,40}$'
+        description:
+          type: string
+          description: Platform description
+          pattern: '^[^\t\n]{0,255}$'
+        status:
+          type: string
+          description: Platform status
+          enum:
+            - active
+            - archived
+    User:
+      type: object
+      description: User domain document
+      additionalProperties: false
+      required:
+        - _id
+        - name
+        - created
+        - saved
+      properties:
+        _id:
+          type: string
+          description: MongoDB document ID
+          pattern: '^[0-9a-fA-F]{24}$'
+          example: 507f1f77bcf86cd799439011
+        name:
+          type: string
+          description: User name
+          pattern: '^[^\s]{1,40}$'
+          example: my-User
+        description:
+          type: string
+          description: User description
+          pattern: '^[^\t\n]{0,255}$'
+          example: A sample User document
+        status:
+          type: string
+          description: User status
+          enum:
+            - active
+            - archived
+          example: active
+        created:
+          $ref: '#/components/schemas/Breadcrumb'
+        saved:
+          $ref: '#/components/schemas/Breadcrumb'
+
+    UserInput:
+      type: object
+      description: Input for creating a User document
+      properties:
+        name:
+          type: string
+          description: User name
+          pattern: '^[^\s]{1,40}$'
+          example: my-User
+        description:
+          type: string
+          description: User description
+          pattern: '^[^\t\n]{0,255}$'
+          example: A sample User document
+        status:
+          type: string
+          description: User status
+          enum:
+            - active
+            - archived
+          example: active
+
+    UserUpdate:
+      type: object
+      description: Fields to update in a User document (cannot include _id, created, saved)
+      properties:
+        name:
+          type: string
+          description: User name
+          pattern: '^[^\s]{1,40}$'
+        description:
+          type: string
+          description: User description
+          pattern: '^[^\t\n]{0,255}$'
+        status:
+          type: string
+          description: User status
+          enum:
+            - active
+            - archived
+    Identity:
+      type: object
+      description: Identity domain document (read-only)
       additionalProperties: false
       required:
         - _id
@@ -865,21 +1163,19 @@ components:
           example: 507f1f77bcf86cd799439011
         name:
           type: string
-          description: {{domain}} name
+          description: Identity name
           pattern: '^[^\s]{1,40}$'
-          example: my-{{domain}}
+          example: my-Identity
         description:
           type: string
-          description: {{domain}} description
+          description: Identity description
           pattern: '^[^\t\n]{0,255}$'
-          example: A sample {{domain}} document
+          example: A sample Identity document
         status:
           type: string
-          description: {{domain}} status
+          description: Identity status
           example: active
-{% endfor -%}
-{{ '    ' -}}
-InfiniteScrollResponse:
+    InfiniteScrollResponse:
       type: object
       description: Infinite scroll pagination response
       required:
